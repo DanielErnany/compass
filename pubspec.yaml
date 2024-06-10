@@ -13,9 +13,11 @@ dependencies:
   flutter_bloc: ^8.1.2
   flutter_localizations:
     sdk: flutter
-  intl: ^0.17.0
+  intl: ^0.18.0
+  sensors_plus: ^4.0.1
   wear: ^1.1.0
   wearable_rotary: ^2.0.2
+
 
 dev_dependencies:
   bloc_test: ^9.1.1
@@ -26,4 +28,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+     - assets/line_background.png
+     - assets/dial.png
+
   generate: true
