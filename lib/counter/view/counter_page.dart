@@ -36,7 +36,9 @@ class _CounterViewState extends State<CounterView> {
   }
 
   void _initSensors() {
-    _magneticSub = magnetometerEventStream().listen((event) {
+    _magneticSub =
+        magnetometerEventStream(samplingPeriod: const Duration(seconds: 1))
+            .listen((event) {
       setState(() {
         _magneticEvent = event;
       });
@@ -60,7 +62,48 @@ class _CounterViewState extends State<CounterView> {
       heading -= 360;
     }
 
-    return heading * -1;
+    if (heading != 0) {
+      heading *= -1;
+    }
+    return heading;
+  }
+
+  String? getCardinalOrCollateralPoint(double degrees) {
+    String? label;
+    final tolerance = 22.5;
+
+    // Normaliza o ângulo para o intervalo [0, 360)
+    final normalizedDegrees = (degrees % 360 + 360) % 360;
+
+    if (normalizedDegrees >= 0 && normalizedDegrees < tolerance) {
+      label = 'N';
+    } else if (normalizedDegrees >= 360 - tolerance ||
+        normalizedDegrees < tolerance) {
+      label = 'N';
+    } else if (normalizedDegrees >= 45 - tolerance &&
+        normalizedDegrees < 45 + tolerance) {
+      label = 'NE';
+    } else if (normalizedDegrees >= 90 - tolerance &&
+        normalizedDegrees < 90 + tolerance) {
+      label = 'L';
+    } else if (normalizedDegrees >= 135 - tolerance &&
+        normalizedDegrees < 135 + tolerance) {
+      label = 'SE';
+    } else if (normalizedDegrees >= 180 - tolerance &&
+        normalizedDegrees < 180 + tolerance) {
+      label = 'S';
+    } else if (normalizedDegrees >= 225 - tolerance &&
+        normalizedDegrees < 225 + tolerance) {
+      label = 'SO';
+    } else if (normalizedDegrees >= 270 - tolerance &&
+        normalizedDegrees < 270 + tolerance) {
+      label = 'O';
+    } else if (normalizedDegrees >= 315 - tolerance &&
+        normalizedDegrees < 315 + tolerance) {
+      label = 'NO';
+    }
+
+    return label;
   }
 
   @override
@@ -75,35 +118,47 @@ class _CounterViewState extends State<CounterView> {
 
     final sizeDevice = MediaQuery.of(context).size;
 
+    final labelCardinalOrColateralPoint = getCardinalOrCollateralPoint(degrees);
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
+        alignment: Alignment.center,
         children: [
-          Center(
-            child: Transform.rotate(
-              angle: angle,
-              child: Image.asset(
-                'assets/line_background.png',
-                height: sizeDevice.height,
-                width: sizeDevice.height,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          Center(
+          Transform.rotate(
+            angle: angle,
             child: Image.asset(
-              'assets/dial.png',
-              height: sizeDevice.height * 0.7,
+              'assets/line_background.png',
+              height: sizeDevice.height,
+              width: sizeDevice.height,
+              fit: BoxFit.cover,
             ),
           ),
-          Center(
-            child: Text(
-              degrees.toStringAsFixed(0),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 25,
+          Image.asset(
+            'assets/dial.png',
+            height: sizeDevice.height * 0.7,
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (labelCardinalOrColateralPoint != null)
+                Text(
+                  labelCardinalOrColateralPoint,
+                  style: TextStyle(
+                    color: labelCardinalOrColateralPoint == 'N'
+                        ? const Color(0xff6FFB01)
+                        : Colors.white,
+                    fontSize: 20,
+                  ),
+                ),
+              Text(
+                '${degrees.toStringAsFixed(0)}°',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
