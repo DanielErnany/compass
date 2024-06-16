@@ -4,7 +4,50 @@ import 'dart:math';
 import 'package:compass/counter/counter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+
+enum CardinalPoints {
+  north,
+  east,
+  south,
+  west;
+
+  @override
+  String toString() {
+    switch (this) {
+      case CardinalPoints.north:
+        return 'N';
+      case CardinalPoints.east:
+        return 'L';
+      case CardinalPoints.south:
+        return 'S';
+      case CardinalPoints.west:
+        return 'O';
+    }
+  }
+}
+
+enum ColateralPoints {
+  northEast,
+  southEast,
+  southWest,
+  northWest;
+
+  @override
+  String toString() {
+    switch (this) {
+      case ColateralPoints.northEast:
+        return 'NE';
+      case ColateralPoints.southEast:
+        return 'SE';
+      case ColateralPoints.southWest:
+        return 'SO';
+      case ColateralPoints.northWest:
+        return 'NO';
+    }
+  }
+}
 
 class CounterPage extends StatelessWidget {
   const CounterPage({super.key});
@@ -28,6 +71,9 @@ class CounterView extends StatefulWidget {
 class _CounterViewState extends State<CounterView> {
   MagnetometerEvent _magneticEvent = MagnetometerEvent(0, 0, 0);
   StreamSubscription<MagnetometerEvent>? _magneticSub;
+
+  String? labelCardinalOrColateralPoint;
+  String? previousLabelCardinalOrColateralPoint;
 
   @override
   void initState() {
@@ -69,41 +115,59 @@ class _CounterViewState extends State<CounterView> {
   }
 
   String? getCardinalOrCollateralPoint(double degrees) {
-    String? label;
-    final tolerance = 22.5;
+    previousLabelCardinalOrColateralPoint = labelCardinalOrColateralPoint;
+    const tolerance = 22.5;
 
     // Normaliza o ângulo para o intervalo [0, 360)
     final normalizedDegrees = (degrees % 360 + 360) % 360;
 
     if (normalizedDegrees >= 0 && normalizedDegrees < tolerance) {
-      label = 'N';
+      labelCardinalOrColateralPoint = CardinalPoints.north.toString();
     } else if (normalizedDegrees >= 360 - tolerance ||
         normalizedDegrees < tolerance) {
-      label = 'N';
+      labelCardinalOrColateralPoint = CardinalPoints.north.toString();
     } else if (normalizedDegrees >= 45 - tolerance &&
         normalizedDegrees < 45 + tolerance) {
-      label = 'NE';
+      labelCardinalOrColateralPoint = ColateralPoints.northEast.toString();
     } else if (normalizedDegrees >= 90 - tolerance &&
         normalizedDegrees < 90 + tolerance) {
-      label = 'L';
+      labelCardinalOrColateralPoint = CardinalPoints.east.toString();
     } else if (normalizedDegrees >= 135 - tolerance &&
         normalizedDegrees < 135 + tolerance) {
-      label = 'SE';
+      labelCardinalOrColateralPoint = ColateralPoints.southEast.toString();
     } else if (normalizedDegrees >= 180 - tolerance &&
         normalizedDegrees < 180 + tolerance) {
-      label = 'S';
+      labelCardinalOrColateralPoint = CardinalPoints.south.toString();
     } else if (normalizedDegrees >= 225 - tolerance &&
         normalizedDegrees < 225 + tolerance) {
-      label = 'SO';
+      labelCardinalOrColateralPoint = ColateralPoints.southWest.toString();
     } else if (normalizedDegrees >= 270 - tolerance &&
         normalizedDegrees < 270 + tolerance) {
-      label = 'O';
+      labelCardinalOrColateralPoint = CardinalPoints.west.toString();
     } else if (normalizedDegrees >= 315 - tolerance &&
         normalizedDegrees < 315 + tolerance) {
-      label = 'NO';
+      labelCardinalOrColateralPoint = ColateralPoints.northWest.toString();
     }
 
-    return label;
+    bool isCardinalPoint = CardinalPoints.values.indexWhere(
+          (element) => element.toString() == labelCardinalOrColateralPoint,
+        ) !=
+        -1;
+
+    if (isCardinalPoint) {
+      if (labelCardinalOrColateralPoint !=
+          previousLabelCardinalOrColateralPoint) {
+        vibrate();
+      }
+    }
+    return labelCardinalOrColateralPoint;
+  }
+
+  Future<void> vibrate() async {
+    bool canVibrate = await Vibrate.canVibrate;
+    if (canVibrate) {
+      Vibrate.feedback(FeedbackType.success);
+    }
   }
 
   @override
@@ -118,7 +182,7 @@ class _CounterViewState extends State<CounterView> {
 
     final sizeDevice = MediaQuery.of(context).size;
 
-    final labelCardinalOrColateralPoint = getCardinalOrCollateralPoint(degrees);
+    labelCardinalOrColateralPoint = getCardinalOrCollateralPoint(degrees);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -143,7 +207,7 @@ class _CounterViewState extends State<CounterView> {
             children: [
               if (labelCardinalOrColateralPoint != null)
                 Text(
-                  labelCardinalOrColateralPoint,
+                  labelCardinalOrColateralPoint!,
                   style: TextStyle(
                     color: labelCardinalOrColateralPoint == 'N'
                         ? const Color(0xff6FFB01)
