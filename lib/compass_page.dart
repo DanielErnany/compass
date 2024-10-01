@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'dart:math';
-
-import 'package:compass/counter/counter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
@@ -49,26 +46,14 @@ enum ColateralPoints {
   }
 }
 
-class CounterPage extends StatelessWidget {
-  const CounterPage({super.key});
+class CompassPage extends StatefulWidget {
+  const CompassPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => CounterCubit(),
-      child: const CounterView(),
-    );
-  }
+  State<CompassPage> createState() => _CompassPageState();
 }
 
-class CounterView extends StatefulWidget {
-  const CounterView({super.key});
-
-  @override
-  State<CounterView> createState() => _CounterViewState();
-}
-
-class _CounterViewState extends State<CounterView> {
+class _CompassPageState extends State<CompassPage> {
   MagnetometerEvent _magneticEvent = MagnetometerEvent(0, 0, 0);
   StreamSubscription<MagnetometerEvent>? _magneticSub;
 
@@ -149,7 +134,7 @@ class _CounterViewState extends State<CounterView> {
       labelCardinalOrColateralPoint = ColateralPoints.northWest.toString();
     }
 
-    bool isCardinalPoint = CardinalPoints.values.indexWhere(
+    final isCardinalPoint = CardinalPoints.values.indexWhere(
           (element) => element.toString() == labelCardinalOrColateralPoint,
         ) !=
         -1;
@@ -164,7 +149,7 @@ class _CounterViewState extends State<CounterView> {
   }
 
   Future<void> vibrate() async {
-    bool canVibrate = await Vibrate.canVibrate;
+    final canVibrate = await Vibrate.canVibrate;
     if (canVibrate) {
       Vibrate.feedback(FeedbackType.success);
     }
@@ -178,7 +163,6 @@ class _CounterViewState extends State<CounterView> {
     );
     final angle = -1 * pi / 180 * degrees;
     print(degrees);
-    print(angle);
 
     final sizeDevice = MediaQuery.of(context).size;
 

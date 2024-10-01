@@ -1,5 +1,5 @@
-import 'package:compass/counter/counter.dart';
-import 'package:compass/l10n/l10n.dart';
+
+import 'package:compass/compass_page.dart';
 import 'package:flutter/material.dart';
 
 class App extends StatelessWidget {
@@ -15,9 +15,7 @@ class App extends StatelessWidget {
         ),
         visualDensity: VisualDensity.compact,
       ),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const CounterPage(),
+      home: const CompassPage(),
     );
   }
 }
